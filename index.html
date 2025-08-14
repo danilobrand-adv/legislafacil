@@ -1,475 +1,425 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LegislaFácil</title>
-    <!-- Substitui o ícone local por um SVG ou fallback -->
-    <link rel="icon" href="https://raw.githubusercontent.com/google/material-design-icons/master/png/image_folder/materialicons/book_black_48dp.png" type="image/png">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: "Inter", sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>LegislaFácil</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/google/material-design-icons/master/png/image_folder/materialicons/book_black_48dp.png" type="image/png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            law: {
+              navy: "#0B1C3F",
+              navy2: "#122553",
+              gold: "#C8A356",
+            },
+          },
+          boxShadow: {
+            soft: "0 8px 24px rgba(2,6,23,.08)",
+          },
+          fontFamily: {
+            inter: ["Inter", "system-ui", "sans-serif"],
+            merri: ["Merriweather", "serif"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body{font-family:"Inter",system-ui,sans-serif}
+    /* Sem @apply para compatibilidade total com Tailwind via CDN */
+    th, td { padding-top: .75rem; padding-bottom: .75rem; text-align: left; }
 
-        /* Estilos base para todas as células da tabela */
-        th, td {
-            @apply py-3 text-left;
-        }
+    /* Larguras responsivas com colgroup (mais robusto que nth-child + @apply) */
+    col.col-ano      { width: 6%;  }
+    col.col-numero   { width: 8%;  }
+    col.col-tipo     { width: 10%; }
+    col.col-categoria{ width: 12%; }
+    col.col-descricao{ width: 50%; }
+    col.col-link     { width: 14%; }
 
-        /* Preenchimento horizontal específico para cada coluna (agora com larguras responsivas) */
-        th:nth-child(1), td:nth-child(1) { @apply pl-4 sm:pl-8 pr-1; width: 6%; min-width: 50px; } /* Coluna 'Ano' */
-        th:nth-child(2), td:nth-child(2) { @apply px-2; width: 8%; min-width: 60px; } /* Coluna 'Número' */
-        th:nth-child(3), td:nth-child(3) { @apply px-2; width: 10%; min-width: 80px; } /* Coluna 'Tipo' */
-        th:nth-child(4), td:nth-child(4) { @apply px-2; width: 12%; min-width: 100px; } /* Coluna 'Categoria' */
-        th:nth-child(5), td:nth-child(5) { @apply px-2; width: 50%; min-width: 250px; } /* Coluna 'Descrição' */
-        th:nth-child(6), td:nth-child(6) { @apply pl-2 pr-4 sm:pr-8; width: 14%; min-width: 90px; } /* Coluna 'Link' */
+    /* Scrollbar do painel de resultados */
+    .scroll-area::-webkit-scrollbar { width: 8px; height: 8px; }
+    .scroll-area::-webkit-scrollbar-track { background:#e5e7eb; border-radius:10px; }
+    .scroll-area::-webkit-scrollbar-thumb { background:#9ca3af; border-radius:10px; }
+    .scroll-area::-webkit-scrollbar-thumb:hover { background:#6b7280; }
 
-        /* Estilos para a rolagem, aprimorados */
-        .overflow-y-auto::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-track {
-            background: #e5e7eb;
-            border-radius: 10px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-thumb {
-            background: #9ca3af;
-            border-radius: 10px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
-        }
-    </style>
+    mark { background: #fde68a; padding: 0 .15em; border-radius: .2rem; }
+  </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-4 sm:p-6 flex flex-col items-center justify-center">
+<body class="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-4 sm:p-6 flex flex-col items-center justify-center">
 
-    <!-- Contêiner principal com altura fixa e layout flexível -->
-    <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-2xl w-full max-w-7xl border border-gray-200 flex flex-col h-[90vh]">
-        
-        <!-- Área de título e filtros (flex-shrink-0 para não rolar) -->
-        <div class="flex-shrink-0">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-gray-800 mb-4 animate-fade-in">
-                <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                    🔎 Legislação Brasileira - Principais Normas
-                </span>
-            </h1>
+  <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-soft w-full max-w-7xl border border-slate-200 flex flex-col h-[90vh]">
+    <!-- Topo fixo (não rola) -->
+    <div class="flex-shrink-0">
+      <div class="mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-law-navy font-merri tracking-tight">
+          <span class="inline-flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-law-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-2.21 0-4 1.79-4 4v1H6a3 3 0 00-3 3v2h2.09a5 5 0 009.82 0H17V11a3 3 0 00-3-3h-2V7c0-1.1.9-2 2-2h4V3h-6zm-5 9a3 3 0 116 0H7zM4 17h16v2H4v-2z"/></svg>
+            Legislação Brasileira — Principais Normas
+          </span>
+        </h1>
+        <p class="text-center text-slate-600 text-sm mt-2">
+          Projeto desenvolvido por <span class="font-semibold">Danilo Brandão</span>, Graduando em Direito pela FADIMAB.
+        </p>
+      </div>
 
-            <!-- Crédito do desenvolvedor -->
-            <p class="text-center text-gray-600 text-sm mb-8">
-                Projeto desenvolvido por Danilo Brandão, Graduando em Direito pela FADIMAB.
-            </p>
+      <div class="mb-6 text-center space-y-2">
+        <p id="loadingMessage" class="text-law-navy font-medium animate-pulse hidden">Carregando dados da planilha…</p>
+        <p id="errorMessage" class="text-red-600 font-medium hidden"></p>
+        <p id="localFileWarning" class="text-amber-700 text-sm p-2 bg-amber-50 rounded-lg border border-amber-200 hidden">
+          ⚠️ Se você abriu este arquivo via <code>file://</code>, a busca pode não funcionar por CORS. Rode um servidor local (ex.: <code>python -m http.server</code>).
+        </p>
+      </div>
 
-            <div class="mb-8 text-center space-y-3">
-                <p id="loadingMessage" class="text-blue-600 font-medium animate-pulse hidden">Carregando dados da planilha...</p>
-                <p id="errorMessage" class="text-red-600 font-medium hidden"></p>
-                <p id="localFileWarning" class="text-orange-600 text-sm mt-2 p-2 bg-orange-50 rounded-lg border border-orange-200 hidden">
-                    ⚠️ Se você abriu este arquivo diretamente do seu seu computador (file://), a busca pode não funcionar devido a restrições de segurança do navegador. Por favor, execute-o em um servidor web local (ex: `python -m http.server` ou `http-server`).
-                </p>
-            </div>
-
-            <!-- Filtros (altura não se expande) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Campo de busca por Ano (agora é um select) -->
-                <div class="flex flex-col">
-                    <label for="ano" class="text-gray-700 text-sm font-semibold mb-2">Ano:</label>
-                    <select
-                        id="ano"
-                        class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-300 ease-in-out shadow-sm hover:shadow-md focus:shadow-lg w-full text-gray-800"
-                    >
-                        <option value="">Todos</option>
-                        <!-- As opções de ano serão populadas dinamicamente aqui -->
-                    </select>
-                </div>
-
-                <!-- Filtro de Tipo -->
-                <div class="flex flex-col">
-                    <label for="tipo" class="text-gray-700 text-sm font-semibold mb-2">Tipo:</label>
-                    <select id="tipo" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-300 ease-in-out shadow-sm hover:shadow-md focus:shadow-lg w-full text-gray-800">
-                        <option value="">Todos</option>
-                        <!-- As opções serão populadas dinamicamente aqui -->
-                    </select>
-                </div>
-
-                <!-- Filtro de Categoria -->
-                <div class="flex flex-col lg:col-span-2">
-                    <label for="categoria" class="text-gray-700 text-sm font-semibold mb-2">Categoria:</label>
-                    <select id="categoria" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-300 ease-in-out shadow-sm hover:shadow-md focus:shadow-lg w-full text-gray-800">
-                        <option value="">Todas</option>
-                        <!-- As opções serão populadas dinamicamente aqui -->
-                    </select>
-                </div>
-
-                <!-- Campo de busca por Palavra-chave -->
-                <div class="flex flex-col lg:col-span-4">
-                    <label for="palavra" class="text-gray-700 text-sm font-semibold mb-2">Palavra-chave (Nº de Lei/Título/Ementa/Descrição):</label>
-                    <input
-                        type="text"
-                        id="palavra"
-                        placeholder="Ex: orçamento, licitação, servidor"
-                        class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-300 ease-in-out shadow-sm hover:shadow-md focus:shadow-lg w-full text-gray-800"
-                    >
-                </div>
-            </div>
-            
-            <!-- Título dos resultados e paginação (também fixo) -->
-            <div class="p-6 bg-gray-50 rounded-t-lg shadow-inner border border-gray-100 border-b-0">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-700 mb-4 border-b-2 pb-2 border-blue-300">
-                    Resultados da pesquisa (<span id="resultsCount">0</span> Leis e Decretos encontrados):
-                </h2>
-
-                <!-- Paginação: Itens por página e controles de navegação -->
-                <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-                    <div class="flex items-center gap-2">
-                        <label for="itemsPerPage" class="text-gray-700 text-sm font-semibold">Leis por página:</label>
-                        <select id="itemsPerPage" class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm">
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                    <div id="paginationControls" class="flex items-center gap-2 flex-wrap justify-center">
-                        <button id="startIndexPageBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out text-sm" disabled>Primeira</button>
-                        <button id="prevPageBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out text-sm" disabled>Anterior</button>
-                        <span id="pageInfo" class="text-gray-700 text-sm font-medium">Página 1 de 1</span>
-                        <button id="nextPageBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out text-sm" disabled>Próxima</button>
-                        <button id="endIndexPageBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out text-sm" disabled>Última</button>
-                    </div>
-                </div>
-            </div>
+      <!-- Filtros -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+        <div class="flex flex-col">
+          <label for="ano" class="text-slate-700 text-sm font-semibold mb-1">Ano:</label>
+          <select id="ano" class="p-3 border border-slate-300 rounded-lg focus:ring-law-navy focus:border-law-navy transition shadow-sm hover:shadow w-full text-slate-800"></select>
         </div>
 
-        <!-- Tabela de resultados com rolagem independente -->
-        <div class="overflow-y-auto overflow-x-auto rounded-b-lg shadow-md border border-gray-200 flex-grow">
-            <table id="tabelaResultados" class="min-w-full divide-y divide-gray-200 table-fixed">
-                <!-- A TAG THEAD recebeu as classes `sticky`, `top-0` e `z-10` -->
-                <thead class="sticky top-0 z-10">
-                    <tr>
-                        <th id="anoHeader" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-tl-lg cursor-pointer hover:bg-gradient-to-r hover:from-blue-700 hover:to-purple-700 transition-colors duration-200 ease-in-out group">
-                            <div class="flex items-center justify-between">
-                                <span>Ano</span>
-                                <span id="sortIndicator" class="text-gray-300 group-hover:text-white transition-opacity duration-200"></span>
-                            </div>
-                        </th>
-                        <th class="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Número</th>
-                        <th class="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Tipo</th>
-                        <th class="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Categoria</th>
-                        <th class="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Descrição</th>
-                        <th class="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-tr-lg">Link</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Resultados serão inseridos aqui -->
-                </tbody>
-            </table>
-            <p id="noResultsMessage" class="text-gray-600 text-center py-8 hidden bg-white rounded-b-lg">Nenhuma lei encontrada.</p>
+        <div class="flex flex-col">
+          <label for="tipo" class="text-slate-700 text-sm font-semibold mb-1">Tipo:</label>
+          <select id="tipo" class="p-3 border border-slate-300 rounded-lg focus:ring-law-navy focus:border-law-navy transition shadow-sm hover:shadow w-full text-slate-800"></select>
         </div>
+
+        <div class="flex flex-col lg:col-span-2">
+          <label for="categoria" class="text-slate-700 text-sm font-semibold mb-1">Categoria:</label>
+          <select id="categoria" class="p-3 border border-slate-300 rounded-lg focus:ring-law-navy focus:border-law-navy transition shadow-sm hover:shadow w-full text-slate-800"></select>
+        </div>
+
+        <div class="flex flex-col lg:col-span-4">
+          <label for="palavra" class="text-slate-700 text-sm font-semibold mb-1">Palavra-chave (Nº/Título/Ementa/Descrição):</label>
+          <input id="palavra" type="text" placeholder="Ex.: orçamento, licitação, servidor"
+                 class="p-3 border border-slate-300 rounded-lg focus:ring-law-navy focus:border-law-navy transition shadow-sm hover:shadow w-full text-slate-800">
+        </div>
+      </div>
+
+      <!-- Header dos resultados + paginação -->
+      <div class="p-5 bg-slate-50 rounded-t-xl shadow-inner border border-slate-200 border-b-0">
+        <h2 class="text-lg sm:text-xl font-bold text-law-navy flex items-center gap-2 border-b pb-2 border-law-gold/50">
+          <span>Resultados da pesquisa</span>
+          <span class="text-slate-500 font-normal text-sm">(<span id="resultsCount">0</span> itens)</span>
+        </h2>
+
+        <div class="mt-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div class="flex items-center gap-2">
+            <label for="itemsPerPage" class="text-slate-700 text-sm font-semibold">Leis por página:</label>
+            <select id="itemsPerPage" class="p-2 border border-slate-300 rounded-md focus:ring-law-navy focus:border-law-navy transition shadow-sm">
+              <option>10</option>
+              <option>20</option>
+              <option>50</option>
+              <option>100</option>
+            </select>
+          </div>
+          <div id="paginationControls" class="flex items-center gap-2 flex-wrap justify-center">
+            <button id="startIndexPageBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-2 px-4 rounded-md transition text-sm disabled:opacity-50" disabled>Primeira</button>
+            <button id="prevPageBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-2 px-4 rounded-md transition text-sm disabled:opacity-50" disabled>Anterior</button>
+            <span id="pageInfo" class="text-slate-700 text-sm font-medium">Página 1 de 1</span>
+            <button id="nextPageBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-2 px-4 rounded-md transition text-sm disabled:opacity-50" disabled>Próxima</button>
+            <button id="endIndexPageBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-2 px-4 rounded-md transition text-sm disabled:opacity-50" disabled>Última</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script>
-        // URL da planilha CSV fornecido pelo usuário
-        const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQGq5L060YUPjnfdEOHM5B_Y19bfy3uYVBmkkpuo1wu-PndIk5n3V49myUpm3vY6vFmEC0bqmGqDSle/pub?gid=0&single=true&output=csv";
+    <!-- Tabela rolável -->
+    <div class="scroll-area overflow-y-auto overflow-x-auto rounded-b-xl shadow-md border border-slate-200 flex-grow">
+      <table id="tabelaResultados" class="min-w-full table-fixed text-sm">
+        <colgroup>
+          <col class="col-ano" />
+          <col class="col-numero" />
+          <col class="col-tipo" />
+          <col class="col-categoria" />
+          <col class="col-descricao" />
+          <col class="col-link" />
+        </colgroup>
+        <thead class="sticky top-0 z-10">
+          <tr>
+            <th id="anoHeader" class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-tl-lg cursor-pointer transition-colors">
+              <div class="flex items-center justify-between pr-2">
+                <span>Ano</span>
+                <span id="sortIndicator" class="text-white/70"></span>
+              </div>
+            </th>
+            <th class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Número</th>
+            <th class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Tipo</th>
+            <th class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Categoria</th>
+            <th class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider">Descrição</th>
+            <th class="bg-gradient-to-r from-law-navy to-law-navy2 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-tr-lg">Link</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="noResultsMessage" class="text-slate-600 text-center py-8 hidden bg-white rounded-b-lg">Nenhuma lei encontrada.</p>
+    </div>
+  </div>
 
-        let allLaws = []; // Armazena todos os dados carregados
-        let filteredLaws = []; // Armazena os dados após a filtragem de busca
-        let currentPage = 1;
-        let itemsPerPage = 10; // Valor inicial
-        let columnMap = {}; // Mapeia os nomes dos cabeçalhos para os nomes das colunas da planilha
-        let sortOrder = 'desc'; // 'asc' para crescente, 'desc' para decrescente
+  <script>
+    // ======= Config =======
+    const URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQGq5L060YUPjnfdEOHM5B_Y19bfy3uYVBmkkpuo1wu-PndIk5n3V49myUpm3vY6vFmEC0bqmGqDSle/pub?gid=0&single=true&output=csv";
 
-        const tabelaResultadosBody = document.querySelector("#tabelaResultados tbody");
-        const resultsCountSpan = document.getElementById("resultsCount");
-        const loadingMessage = document.getElementById("loadingMessage");
-        const errorMessage = document.getElementById("errorMessage");
-        const noResultsMessage = document.getElementById("noResultsMessage");
-        const localFileWarning = document.getElementById("localFileWarning");
+    let allLaws = [];
+    let filteredLaws = [];
+    let currentPage = 1;
+    let itemsPerPage = 10;
+    let columnMap = {};
+    let sortOrder = "desc"; // 'asc' | 'desc'
 
-        // Elementos de paginação
-        const itemsPerPageSelect = document.getElementById("itemsPerPage");
-        const startIndexPageBtn = document.getElementById("startIndexPageBtn");
-        const prevPageBtn = document.getElementById("prevPageBtn");
-        const nextPageBtn = document.getElementById("nextPageBtn");
-        const pageInfoSpan = document.getElementById("pageInfo");
-        const endIndexPageBtn = document.getElementById("endIndexPageBtn");
+    // ======= Elements =======
+    const tabelaResultadosBody = document.querySelector("#tabelaResultados tbody");
+    const resultsCountSpan = document.getElementById("resultsCount");
+    const loadingMessage = document.getElementById("loadingMessage");
+    const errorMessage = document.getElementById("errorMessage");
+    const noResultsMessage = document.getElementById("noResultsMessage");
+    const localFileWarning = document.getElementById("localFileWarning");
 
-        // Elementos de filtro e ordenação
-        const anoSelect = document.getElementById("ano"); // Variável atualizada para o select
-        const tipoSelect = document.getElementById("tipo");
-        const categoriaSelect = document.getElementById("categoria");
-        const palavraInput = document.getElementById("palavra");
-        const anoHeader = document.getElementById("anoHeader");
-        const sortIndicator = document.getElementById("sortIndicator");
+    const itemsPerPageSelect = document.getElementById("itemsPerPage");
+    const startIndexPageBtn = document.getElementById("startIndexPageBtn");
+    const prevPageBtn = document.getElementById("prevPageBtn");
+    const nextPageBtn = document.getElementById("nextPageBtn");
+    const pageInfoSpan = document.getElementById("pageInfo");
+    const endIndexPageBtn = document.getElementById("endIndexPageBtn");
 
-        // Função para exibir mensagens de erro
-        function showErrorMessage(message) {
-            errorMessage.textContent = message;
-            errorMessage.classList.remove('hidden');
-            loadingMessage.classList.add('hidden');
-            noResultsMessage.classList.add('hidden');
-        }
+    const anoSelect = document.getElementById("ano");
+    const tipoSelect = document.getElementById("tipo");
+    const categoriaSelect = document.getElementById("categoria");
+    const palavraInput = document.getElementById("palavra");
+    const anoHeader = document.getElementById("anoHeader");
+    const sortIndicator = document.getElementById("sortIndicator");
 
-        // Função para ocultar mensagens de erro
-        function hideErrorMessage() {
-            errorMessage.classList.add('hidden');
-        }
+    // ======= Utils =======
+    const escapeHTML = (str = "") =>
+      str.replace(/[&<>"'`=\/]/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","/":"&#x2F;","`":"&#x60;","=":"&#x3D;" }[s]));
 
-        /**
-         * Carrega os dados da planilha CSV.
-         */
-        async function carregarDados() {
-            loadingMessage.classList.remove('hidden');
-            hideErrorMessage();
-            tabelaResultadosBody.innerHTML = '';
-            resultsCountSpan.textContent = '0';
-            noResultsMessage.classList.add('hidden');
+    const normalize = (s = "") =>
+      s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
-            if (window.location.protocol === 'file:') {
-                localFileWarning.classList.remove('hidden');
-                showErrorMessage('Falha ao carregar a planilha. Restrição de segurança do navegador (CORS).');
-                return;
-            } else {
-                localFileWarning.classList.add('hidden');
-            }
+    const highlight = (text = "", query = "") => {
+      if (!query) return text;
+      const q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return text.replace(new RegExp(`(${q})`, "gi"), "<mark>$1</mark>");
+    };
 
-            try {
-                const resposta = await fetch(URL_CSV);
-                if (!resposta.ok) {
-                    throw new Error(`Erro de rede ou URL inválido: ${resposta.status} ${resposta.statusText}`);
-                }
-                const rawCsvText = await resposta.text();
-                allLaws = csvParaJSON(rawCsvText);
-                console.log("✅ Dados carregados:", allLaws);
-                
-                // Popula os filtros com base nos dados carregados
-                popularFiltros();
-                
-                buscarLeis(); // Inicia a busca com os filtros padrão
-            } catch (error) {
-                console.error("Erro ao carregar dados:", error);
-                showErrorMessage(`Falha ao carregar a planilha: ${error.message}. Verifique o URL e as permissões de publicação.`);
-                tabelaResultadosBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-600 py-4">Erro ao carregar dados.</td></tr>`;
-                resultsCountSpan.textContent = '0';
-            } finally {
-                loadingMessage.classList.add('hidden');
-            }
-        }
+    function showErrorMessage(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.remove("hidden");
+      loadingMessage.classList.add("hidden");
+      noResultsMessage.classList.add("hidden");
+    }
+    function hideErrorMessage() { errorMessage.classList.add("hidden"); }
 
-        /**
-         * Converte o texto CSV em um array de objetos JSON.
-         * @param {string} csv - O texto da planilha em formato CSV.
-         * @returns {Array<Object>} Um array de objetos, onde cada objeto representa uma linha da planilha.
-         */
-        function csvParaJSON(csv) {
-            const linhas = csv.split("\n").map(l => l.trim()).filter(l => l);
-            if (linhas.length === 0) return [];
+    // ======= Load CSV =======
+    async function carregarDados() {
+      loadingMessage.classList.remove("hidden");
+      hideErrorMessage();
+      tabelaResultadosBody.innerHTML = "";
+      resultsCountSpan.textContent = "0";
+      noResultsMessage.classList.add("hidden");
 
-            // Tenta encontrar o cabeçalho pela palavra 'ano'
-            const linhaCabecalhoIndex = linhas.findIndex(l => l.toLowerCase().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).some(col => col.trim().toLowerCase() === "ano"));
-            
-            if (linhaCabecalhoIndex === -1) {
-                console.error("Cabeçalho 'ano' não encontrado no CSV.");
-                return [];
-            }
-            
-            const cabecalhosRaw = linhas[linhaCabecalhoIndex].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            const cabecalhos = cabecalhosRaw.map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
-            
-            // Cria um mapa para os nomes das colunas (ex: "descrição" -> "descrição", "link da lei" -> "link")
-            columnMap = {
-                'ano': cabecalhos.find(h => h === 'ano'),
-                'numero': cabecalhos.find(h => h === 'número' || h === 'numero'),
-                'tipo': cabecalhos.find(h => h === 'tipo'),
-                'categoria': cabecalhos.find(h => h === 'categoria'),
-                'descricao': cabecalhos.find(h => h === 'descrição' || h === 'descricao'),
-                'link': cabecalhos.find(h => h === 'link da lei' || h === 'link')
-            };
+      if (window.location.protocol === "file:") {
+        localFileWarning.classList.remove("hidden");
+        showErrorMessage("Falha ao carregar a planilha. Restrição de segurança do navegador (CORS).");
+        return;
+      } else {
+        localFileWarning.classList.add("hidden");
+      }
 
-            return linhas.slice(linhaCabecalhoIndex + 1).map(linha => {
-                const valores = linha.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                const obj = {};
-                cabecalhos.forEach((coluna, i) => {
-                    obj[coluna] = valores[i] ? valores[i].replace(/^"|"$/g, "").trim() : "";
-                });
-                return obj;
-            });
-        }
+      try {
+        const resposta = await fetch(URL_CSV);
+        if (!resposta.ok) throw new Error(`Erro de rede ou URL inválido: ${resposta.status} ${resposta.statusText}`);
+        const rawCsvText = await resposta.text();
+        allLaws = csvParaJSON(rawCsvText);
+        popularFiltros();
+        buscarLeis();
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+        showErrorMessage(`Falha ao carregar a planilha: ${error.message}. Verifique o URL e as permissões de publicação.`);
+        tabelaResultadosBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-600 py-4">Erro ao carregar dados.</td></tr>`;
+      } finally {
+        loadingMessage.classList.add("hidden");
+      }
+    }
 
-        /**
-         * Popula os dropdowns de filtro com valores únicos da planilha.
-         */
-        function popularFiltros() {
-            // Popula os anos
-            const anosUnicos = [...new Set(allLaws.map(item => item[columnMap.ano]).filter(v => v))].sort((a, b) => b - a);
-            anoSelect.innerHTML = '<option value="">Todos</option>' + anosUnicos.map(a => `<option value="${a}">${a}</option>`).join('');
+    function csvParaJSON(csv) {
+      const linhas = csv.split("\n").map(l => l.replace(/\r$/, "").trim()).filter(Boolean);
+      if (!linhas.length) return [];
 
-            // Popula os tipos
-            const tiposUnicos = [...new Set(allLaws.map(item => item[columnMap.tipo]).filter(v => v))].sort();
-            tipoSelect.innerHTML = '<option value="">Todos</option>' + tiposUnicos.map(t => `<option value="${t}">${t}</option>`).join('');
-            
-            // Popula as categorias
-            const categoriasUnicas = [...new Set(allLaws.map(item => item[columnMap.categoria]).filter(v => v))].sort();
-            categoriaSelect.innerHTML = '<option value="">Todas</option>' + categoriasUnicas.map(c => `<option value="${c}">${c}</option>`).join('');
-        }
+      const headerIndex = linhas.findIndex(l =>
+        l.toLowerCase().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+         .some(col => col.trim() === "ano")
+      );
+      if (headerIndex === -1) return [];
 
-        /**
-         * Filtra as leis com base nos campos de busca e exibe os resultados paginados.
-         */
-        function buscarLeis() {
-            const anoFiltro = anoSelect.value.trim(); // Usa o valor do select
-            const tipoFiltro = tipoSelect.value.trim().toLowerCase();
-            const categoriaFiltro = categoriaSelect.value.trim().toLowerCase();
-            const palavraFiltro = palavraInput.value.trim().toLowerCase();
+      const headersRaw = linhas[headerIndex].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+      const headers = headersRaw.map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
 
-            filteredLaws = allLaws.filter(item => {
-                const anoDoItem = item[columnMap.ano] || "";
-                const tipoDoItem = (item[columnMap.tipo] || "").toLowerCase();
-                const categoriaDoItem = (item[columnMap.categoria] || "").toLowerCase();
-                const descricaoDoItem = (item[columnMap.descricao] || "").toLowerCase();
-                const numeroDoItem = (item[columnMap.numero] || "").toLowerCase();
+      columnMap = {
+        ano: headers.find(h => h === "ano"),
+        numero: headers.find(h => h === "número" || h === "numero"),
+        tipo: headers.find(h => h === "tipo"),
+        categoria: headers.find(h => h === "categoria"),
+        descricao: headers.find(h => h === "descrição" || h === "descricao"),
+        link: headers.find(h => h === "link da lei" || h === "link"),
+      };
 
-                const anoOk = !anoFiltro || (anoDoItem === anoFiltro);
-                const tipoOk = !tipoFiltro || (tipoDoItem === tipoFiltro);
-                const categoriaOk = !categoriaFiltro || (categoriaDoItem === categoriaFiltro);
-                const palavraOk = !palavraFiltro || 
-                                 descricaoDoItem.includes(palavraFiltro) || 
-                                 numeroDoItem.includes(palavraFiltro) ||
-                                 tipoDoItem.includes(palavraFiltro) ||
-                                 categoriaDoItem.includes(palavraFiltro);
+      return linhas.slice(headerIndex + 1).map(l => {
+        const vals = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        const obj = {};
+        headers.forEach((col, i) => { obj[col] = vals[i] ? vals[i].replace(/^"|"$/g, "").trim() : ""; });
+        return obj;
+      });
+    }
 
-                return anoOk && tipoOk && categoriaOk && palavraOk;
-            });
+    // ======= Filters =======
+    function popularFiltros() {
+      const mkOptions = (arr, labelAll) =>
+        [`<option value="">${labelAll}</option>`, ...arr.map(v => `<option value="${escapeHTML(v)}">${escapeHTML(v)}</option>`)].join("");
 
-            currentPage = 1; // Reseta para a primeira página ao fazer uma nova busca
-            ordenarLeisPorAno();
-        }
+      const anos = [...new Set(allLaws.map(it => it[columnMap.ano]).filter(Boolean))].sort((a,b)=> (parseInt(b)||0)-(parseInt(a)||0));
+      anoSelect.innerHTML = mkOptions(anos, "Todos");
 
-        /**
-         * Ordena a lista de leis filtradas com base no ano.
-         */
-        function ordenarLeisPorAno() {
-            if (!columnMap.ano) {
-                console.warn("Coluna 'ano' não encontrada. A ordenação não será aplicada.");
-                return;
-            }
-            
-            filteredLaws.sort((a, b) => {
-                const anoA = parseInt(a[columnMap.ano], 10) || 0;
-                const anoB = parseInt(b[columnMap.ano], 10) || 0;
+      const tipos = [...new Set(allLaws.map(it => it[columnMap.tipo]).filter(Boolean))].sort((a,b)=> a.localeCompare(b));
+      tipoSelect.innerHTML = mkOptions(tipos, "Todos");
 
-                if (sortOrder === 'asc') {
-                    return anoA - anoB;
-                } else {
-                    return anoB - anoA;
-                }
-            });
-            exibirLeisPaginadas();
-        }
+      const categorias = [...new Set(allLaws.map(it => it[columnMap.categoria]).filter(Boolean))].sort((a,b)=> a.localeCompare(b));
+      categoriaSelect.innerHTML = mkOptions(categorias, "Todas");
+    }
 
-        /**
-         * Exibe os resultados na tabela, aplicando paginação.
-         */
-        function exibirLeisPaginadas() {
-            tabelaResultadosBody.innerHTML = "";
-            noResultsMessage.classList.add('hidden');
+    // ======= Search =======
+    function buscarLeis() {
+      const anoFiltro = (anoSelect.value || "").trim();
+      const tipoFiltro = normalize(tipoSelect.value || "");
+      const categoriaFiltro = normalize(categoriaSelect.value || "");
+      const palavraFiltro = normalize(palavraInput.value || "");
 
-            const totalPages = Math.ceil(filteredLaws.length / itemsPerPage);
-            pageInfoSpan.textContent = `Página ${currentPage} de ${totalPages || 1}`;
+      filteredLaws = allLaws.filter(item => {
+        const ano = (item[columnMap.ano] || "").trim();
+        const tipo = normalize(item[columnMap.tipo] || "");
+        const categoria = normalize(item[columnMap.categoria] || "");
+        const desc = normalize(item[columnMap.descricao] || "");
+        const numero = normalize(item[columnMap.numero] || "");
+        const allText = `${tipo} ${categoria} ${desc} ${numero}`;
 
-            // Controla o estado dos botões de navegação
-            const isFirstPage = currentPage === 1 || filteredLaws.length === 0;
-            const isLastPage = currentPage === totalPages || filteredLaws.length === 0;
-            startIndexPageBtn.disabled = isFirstPage;
-            prevPageBtn.disabled = isFirstPage;
-            nextPageBtn.disabled = isLastPage;
-            endIndexPageBtn.disabled = isLastPage;
+        const anoOk = !anoFiltro || ano === anoFiltro;
+        const tipoOk = !tipoFiltro || tipo === tipoFiltro;
+        const catOk = !categoriaFiltro || categoria === categoriaFiltro;
+        const qOk = !palavraFiltro || allText.includes(palavraFiltro);
 
-            // Exibe o indicador de ordenação
-            sortIndicator.textContent = filteredLaws.length > 0 ? (sortOrder === 'asc' ? '▲' : '▼') : '';
+        return anoOk && tipoOk && catOk && qOk;
+      });
 
-            if (filteredLaws.length === 0) {
-                noResultsMessage.classList.remove('hidden');
-                resultsCountSpan.textContent = '0';
-                return;
-            }
+      currentPage = 1;
+      ordenarLeisPorAno();
+    }
 
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const lawsToDisplay = filteredLaws.slice(startIndex, endIndex);
+    function ordenarLeisPorAno() {
+      if (!columnMap.ano) return;
+      filteredLaws.sort((a, b) => {
+        const A = parseInt(a[columnMap.ano], 10) || 0;
+        const B = parseInt(b[columnMap.ano], 10) || 0;
+        return sortOrder === "asc" ? A - B : B - A;
+      });
+      exibirLeisPaginadas();
+    }
 
-            lawsToDisplay.forEach((item, index) => {
-                const linha = document.createElement("tr");
-                // Adiciona a classe de cor de forma programática para garantir a alternância
-                // Agora, explicitamente define as cores para evitar conflitos
-                linha.classList.add(index % 2 === 0 ? 'bg-white' : 'bg-gray-50');
-                linha.innerHTML = `
-                    <td class="font-semibold text-gray-800">${item[columnMap.ano] || ""}</td>
-                    <td class="text-gray-700">${item[columnMap.numero] || ""}</td>
-                    <td class="text-gray-700">${item[columnMap.tipo] || ""}</td>
-                    <td class="text-gray-700">${item[columnMap.categoria] || ""}</td>
-                    <td class="text-gray-700 break-words">${item[columnMap.descricao] || ""}</td>
-                    <td>
-                        <a href="${item[columnMap.link] || "#"}" target="_blank"
-                            class="inline-flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md hover:shadow-lg transition-all duration-200 ease-in-out text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L14.414 5A2 2 0 0115 6.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1-3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
-                            </svg>
-                            Acessar
-                        </a>
-                    </td>
-                `;
-                tabelaResultadosBody.appendChild(linha);
-            });
-            resultsCountSpan.textContent = filteredLaws.length;
-        }
+    // ======= Render/Pagination =======
+    function exibirLeisPaginadas() {
+      tabelaResultadosBody.innerHTML = "";
+      noResultsMessage.classList.add("hidden");
 
-        // Event Listeners para os campos de busca e seleção (atualizados)
-        anoSelect.addEventListener("change", buscarLeis);
-        tipoSelect.addEventListener("change", buscarLeis);
-        categoriaSelect.addEventListener("change", buscarLeis);
-        palavraInput.addEventListener("input", buscarLeis);
-        
-        // Event Listener para o seletor de itens por página
-        itemsPerPageSelect.addEventListener("change", (e) => {
-            itemsPerPage = parseInt(e.target.value);
-            currentPage = 1; // Volta para a primeira página
-            exibirLeisPaginadas();
-        });
+      const totalPages = Math.ceil(filteredLaws.length / itemsPerPage) || 1;
+      pageInfoSpan.textContent = `Página ${currentPage} de ${totalPages}`;
 
-        // Event Listeners para os botões de paginação
-        startIndexPageBtn.addEventListener("click", () => {
-            currentPage = 1;
-            exibirLeisPaginadas();
-        });
-        prevPageBtn.addEventListener("click", () => {
-            if (currentPage > 1) {
-                currentPage--;
-                exibirLeisPaginadas();
-            }
-        });
-        nextPageBtn.addEventListener("click", () => {
-            const totalPages = Math.ceil(filteredLaws.length / itemsPerPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                exibirLeisPaginadas();
-            }
-        });
-        endIndexPageBtn.addEventListener("click", () => {
-            const totalPages = Math.ceil(filteredLaws.length / itemsPerPage);
-            currentPage = totalPages;
-            exibirLeisPaginadas();
-        });
-        
-        // Event Listener para a ordenação por Ano
-        anoHeader.addEventListener('click', () => {
-            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-            ordenarLeisPorAno();
-        });
+      const isFirst = currentPage === 1 || !filteredLaws.length;
+      const isLast  = currentPage === totalPages || !filteredLaws.length;
+      startIndexPageBtn.disabled = isFirst;
+      prevPageBtn.disabled = isFirst;
+      nextPageBtn.disabled = isLast;
+      endIndexPageBtn.disabled  = isLast;
 
-        // Carrega os dados ao iniciar a página
-        carregarDados();
-    </script>
+      sortIndicator.textContent = filteredLaws.length ? (sortOrder === "asc" ? "▲" : "▼") : "";
+
+      if (!filteredLaws.length) {
+        resultsCountSpan.textContent = "0";
+        noResultsMessage.classList.remove("hidden");
+        return;
+      }
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageItems = filteredLaws.slice(start, end);
+
+      const qRaw = (palavraInput.value || "").trim();
+      const qEscaped = escapeHTML(qRaw);
+
+      pageItems.forEach((item, idx) => {
+        const ano = escapeHTML(item[columnMap.ano] || "");
+        const numero = escapeHTML(item[columnMap.numero] || "");
+        const tipo = escapeHTML(item[columnMap.tipo] || "");
+        const categoria = escapeHTML(item[columnMap.categoria] || "");
+        const descricao = escapeHTML(item[columnMap.descricao] || "");
+        const link = item[columnMap.link] || "#";
+
+        const tr = document.createElement("tr");
+        tr.className = idx % 2 === 0 ? "bg-white hover:bg-slate-50 transition-colors" : "bg-slate-50 hover:bg-slate-100 transition-colors";
+        tr.innerHTML = `
+          <td class="font-semibold text-slate-900 pr-2">${highlight(ano, qEscaped)}</td>
+          <td class="text-slate-800 px-2">${highlight(numero, qEscaped)}</td>
+          <td class="text-slate-800 px-2">${highlight(tipo, qEscaped)}</td>
+          <td class="text-slate-800 px-2">${highlight(categoria, qEscaped)}</td>
+          <td class="text-slate-800 px-2 break-words">${highlight(descricao, qEscaped)}</td>
+          <td class="pl-2 pr-4">
+            <a href="${link}" target="_blank"
+               class="inline-flex items-center gap-2 bg-law-navy hover:bg-law-navy2 text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:shadow-md transition text-xs sm:text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L14.414 5A2 2 0 0115 6.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1-3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+              </svg>
+              Acessar
+            </a>
+          </td>
+        `;
+        tabelaResultadosBody.appendChild(tr);
+      });
+
+      resultsCountSpan.textContent = filteredLaws.length;
+    }
+
+    // ======= Events =======
+    anoSelect.addEventListener("change", buscarLeis);
+    tipoSelect.addEventListener("change", buscarLeis);
+    categoriaSelect.addEventListener("change", buscarLeis);
+    palavraInput.addEventListener("input", buscarLeis);
+
+    itemsPerPageSelect.addEventListener("change", (e) => {
+      itemsPerPage = parseInt(e.target.value, 10);
+      currentPage = 1;
+      exibirLeisPaginadas();
+    });
+
+    startIndexPageBtn.addEventListener("click", () => { currentPage = 1; exibirLeisPaginadas(); });
+    prevPageBtn.addEventListener("click", () => { if (currentPage > 1) { currentPage--; exibirLeisPaginadas(); } });
+    nextPageBtn.addEventListener("click", () => {
+      const total = Math.ceil(filteredLaws.length / itemsPerPage);
+      if (currentPage < total) { currentPage++; exibirLeisPaginadas(); }
+    });
+    endIndexPageBtn.addEventListener("click", () => {
+      const total = Math.ceil(filteredLaws.length / itemsPerPage) || 1;
+      currentPage = total; exibirLeisPaginadas();
+    });
+
+    anoHeader.addEventListener("click", () => {
+      sortOrder = sortOrder === "asc" ? "desc" : "asc";
+      ordenarLeisPorAno();
+    });
+
+    // ======= Init =======
+    carregarDados();
+  </script>
 </body>
 </html>
